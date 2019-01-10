@@ -2,6 +2,7 @@
 # cython: cdivision   = True
 
 include "../include/trigonometric.pxi"
+include "../include/text.pxi"
 cimport cython
 from libc.math cimport sqrt, atan2, fabs
 from cpython.object cimport PyObject_TypeCheck
@@ -19,6 +20,7 @@ cdef class Vec2:
     """
     ndim = 2
     nitems = 2
+    size = 2
     dtype = float
     shape = (2,)
 
@@ -111,7 +113,7 @@ cdef class Vec2:
         self.data = dvec2(x, y)
 
     def __repr__(self):
-        return f'Vec2({self.x}, {self.y})'
+        return f'Vec2({fmt(self.x)}, {fmt(self.y)})'
 
     def __len__(self):
         return 2
@@ -124,16 +126,15 @@ cdef class Vec2:
         cdef int i
         try:
             i = idx
+        except TypeError:
+            if isinstance(idx, slice):
+                return [self.data.x, self.data.y][idx]
+        else:
             if i == 0 or i == -2:
                 return x(self)
             elif i == 1 or i == -1:
                 return y(self)
-        except TypeError:
-            pass
-        if isinstance(idx, slice):
-            return (self.data.x, self.data.y)[idx]
-        else:
-            raise IndexError(idx)
+        raise IndexError(idx)
 
     def __neg__(self):
         return vec2(-self.data)
@@ -294,6 +295,46 @@ cdef class Vec2:
             return vec2(dot(self.data, n[0]) * n[0])
         else:
             return vec2(vprojection(self.data, tovec2(direction).data))
+
+    def clamp(self, double min, double max):
+        """Set length between minimum and maximum values."""
+        cdef double len = length(self.data)
+        if min <= len <= max:
+            return self
+        elif len < min:
+            return vec2(self.data * (min / len))
+        elif len > max:
+            return vec2(self.data * (max / len))
+        else:
+            raise ValueError('cannot re-scale a zero-length vector.')
+
+
+    def sized(self, double size):
+        """Return a copy with the given length."""
+        cdef double len = length(self.data)
+        if len != 0:
+            return vec2(self.data * (size / len))
+        else:
+            raise ValueError('cannot re-scale a zero-length vector.')
+
+    def lerp(self, other, double ratio=0.5):
+        """
+        Linear interpolation with other.
+
+            ratio = 0 ==> other;
+            ratio = 1 ==> self;
+            otherwise ==> in between;
+        """
+        cdef dvec2 vec
+        set_vec(other, &vec)
+        return vec2(self.data * ratio + vec * (1.0 - ratio))
+
+    def midpoint(self, other):
+        """Midpoint between two vectors."""
+        cdef dvec2 vec
+        set_vec(other, &vec)
+        return vec2((self.data + vec) / 2)
+
     #
     # Queries
     #
