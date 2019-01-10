@@ -1,0 +1,10 @@
+.idea
+.ipynb_checkpoints/
+.nbgrader.log
+Untitled.ipynb
+old.ipynb
+build
+dist
+*.so
+.coverage
+__pycache__

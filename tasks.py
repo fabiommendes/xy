@@ -14,3 +14,9 @@ def build(ctx):
 def test(ctx):
     build(ctx)
     ctx.run(f'{python} -m pytest')
+
+
+@task
+def coverage(ctx):
+    build(ctx)
+    ctx.run(f'{python} -m pytest --cov')

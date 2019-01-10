@@ -1,0 +1,17 @@
+language: python
+python:
+    - "3.6"
+    - "3.7"
+
+# Install dependencies
+install:
+    - pip install pip -U
+    - pip install .[dev] -r requirements.txt
+    - pip install codecov pytest-cov
+
+# Run tests
+script:
+    - inv coverage
+
+after_success:
+    - codecov
