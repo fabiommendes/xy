@@ -1,12 +1,9 @@
 import os
-from pathlib import Path
 
 from setuptools import setup, find_packages
 from setuptools.extension import Extension
 
-BASE = Path(__file__).parent
-INCLUDES = [str(BASE / 'include')]
-
+# Prepare Cython imports
 try:
     if os.environ.get('DISABLE_CYTHON') == 'true':
         raise ImportError
@@ -20,6 +17,7 @@ else:
     setup_kwds = {'cmdclass': {'build_ext': build_ext}}
 
 
+# Auxiliary functions
 def extension(name: str, compile_args=(), link_args=(), include_dirs=(),
               libraries=(), **kwargs):
     """Build standard Cython extension."""
@@ -39,15 +37,20 @@ def get_extensions():
     """Create a list of all extensions for the project."""
 
     return cythonize([
+        # Linear algebra 2d
         extension('xy.linalg2d.vector_2d', language='c++'),
         extension('xy.linalg2d.matrix_2x2', language='c++'),
         extension('xy.linalg2d.vecarray_2d', language='c++'),
+
+        # Shapes 2d
+        extension('xy.shapes2d.bbox_2d', language='c++'),
     ], include_path=['include'])
 
 
 # Meta information
 version = '0.1.0b0'
 
+# Run main setup
 setup(
     # Basic info
     name='xy-math',
