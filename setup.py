@@ -8,6 +8,8 @@ BASE = Path(__file__).parent
 INCLUDES = [str(BASE / 'include')]
 
 try:
+    if os.environ.get('DISABLE_CYTHON') == 'true':
+        raise ImportError
     from Cython.Build import cythonize
     from Cython.Distutils import build_ext, Extension
 except ImportError:
@@ -20,9 +22,8 @@ else:
 
 def extension(name: str, compile_args=(), link_args=(), include_dirs=(),
               libraries=(), **kwargs):
-    """
-    Standard Cython extension.
-    """
+    """Build standard Cython extension."""
+
     path = os.path.sep.join(['src', *name.split('.')]) + '.pyx'
     include_dirs = ['include', *include_dirs]
     return Extension(name,
@@ -35,6 +36,8 @@ def extension(name: str, compile_args=(), link_args=(), include_dirs=(),
 
 
 def get_extensions():
+    """Create a list of all extensions for the project."""
+
     return cythonize([
         extension('xy.linalg2d.vector_2d', language='c++'),
         extension('xy.linalg2d.matrix_2x2', language='c++'),

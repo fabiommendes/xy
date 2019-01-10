@@ -9,3 +9,4 @@ dist
 .coverage
 __pycache__
 *.egg-info
+src/xy/**/*.cpp
