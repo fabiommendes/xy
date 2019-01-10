@@ -37,6 +37,7 @@ def extension(name: str, compile_args=(), link_args=(), include_dirs=(),
 def get_extensions():
     return cythonize([
         extension('xy.linalg2d.vector_2d', language='c++'),
+        extension('xy.linalg2d.matrix_2x2', language='c++'),
     ], include_path=['include'])
 
 

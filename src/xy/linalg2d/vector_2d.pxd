@@ -34,6 +34,7 @@ cdef extern from "glm/geometric.hpp" namespace "glm":
 # ------------------------------------------------------------------------------
 # VECTOR CLASSES
 # ------------------------------------------------------------------------------
+
 cdef class Vec2:
     cdef dvec2 data
 
@@ -44,6 +45,7 @@ cdef class Direction2(Vec2):
 # ------------------------------------------------------------------------------
 # UTILITY FUNCTIONS
 # ------------------------------------------------------------------------------
+
 cdef Vec2 vec2(dvec2)
 cdef Vec2 direction2(dvec2)
 cdef Vec2 newvec2(double, double)
