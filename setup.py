@@ -19,7 +19,7 @@ else:
 
 # Auxiliary functions
 def extension(name: str, compile_args=(), link_args=(), include_dirs=(),
-              libraries=(), **kwargs):
+              libraries=(), language='c++', **kwargs):
     """Build standard Cython extension."""
 
     path = os.path.sep.join(['src', *name.split('.')]) + '.pyx'
@@ -30,6 +30,7 @@ def extension(name: str, compile_args=(), link_args=(), include_dirs=(),
                      extra_link_args=link_args,
                      include_dirs=include_dirs,
                      libraries=libraries,
+                     language=language,
                      **kwargs)
 
 
@@ -38,12 +39,13 @@ def get_extensions():
 
     return cythonize([
         # Linear algebra 2d
-        extension('xy.linalg2d.vector_2d', language='c++'),
-        extension('xy.linalg2d.matrix_2x2', language='c++'),
-        extension('xy.linalg2d.vecarray_2d', language='c++'),
+        extension('xy.linalg2d.vector_2d'),
+        extension('xy.linalg2d.matrix_2x2'),
+        extension('xy.linalg2d.vecarray_2d'),
 
         # Shapes 2d
-        extension('xy.shapes2d.bbox_2d', language='c++'),
+        extension('xy.shapes2d.bbox_2d'),
+        extension('xy.shapes2d.line_2d'),
     ], include_path=['include'])
 
 
