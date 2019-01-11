@@ -19,7 +19,6 @@ cdef class Vec2:
     Simple 2D Vector
     """
     ndim = 2
-    nitems = 2
     size = 2
     dtype = float
     shape = (2,)
@@ -63,7 +62,7 @@ cdef class Vec2:
     # Constructors
     #
     @classmethod
-    def from_list(cls, data):
+    def from_flat(cls, data):
         """Create vector from 2-sequence."""
         x, y = data
         return newvec2(x, y)
@@ -139,8 +138,11 @@ cdef class Vec2:
     def __neg__(self):
         return vec2(-self.data)
 
+    def __pos__(self):
+        return self
+
     def __abs__(self):
-        return self.length
+        return length(self.data)
 
     def __bool__(self):
         return self.data.x != 0.0 or self.data.y != 0.0
@@ -187,6 +189,19 @@ cdef class Vec2:
             if isvec(u):
                 m = v
                 return vec2((<Vec2> u).data / m)
+            else:
+                return NotImplemented
+        except TypeError:
+            return NotImplemented
+
+    def __floordiv__(u, v):
+        cdef double m
+        try:
+            if isvec(u):
+                m = v
+                return vec2(floor((<Vec2> u).data / m))
+            else:
+                return NotImplemented
         except TypeError:
             return NotImplemented
 
@@ -261,22 +276,27 @@ cdef class Vec2:
     #
     def dot(self, other):
         """Dot product with another vector."""
+
         return dot(self.data, tovec2(other).data)
 
     def distance_to(self, other):
         """Compute distance from vector."""
+
         return distance(self.data, tovec2(other).data)
 
     def angle_to(self, other):
         """Return the angle to other vector."""
+
         return angle(self.data, tovec2(other).data) * dg
 
     def angle_to_rad(self, other):
         """Return the angle to other vector (measured in radians)."""
+
         return angle(self.data, tovec2(other).data)
 
     def reflect(self, direction):
         """Reflection of vector around given normal direction."""
+
         cdef dvec2 *n
         if isdirection(direction):
             n = &(<Vec2> direction).data
@@ -298,6 +318,7 @@ cdef class Vec2:
 
     def clamp(self, double min, double max):
         """Set length between minimum and maximum values."""
+
         cdef double len = length(self.data)
         if min <= len <= max:
             return self
@@ -308,29 +329,31 @@ cdef class Vec2:
         else:
             raise ValueError('cannot re-scale a zero-length vector.')
 
-
-    def sized(self, double size):
+    def with_length(self, double size):
         """Return a copy with the given length."""
+
         cdef double len = length(self.data)
         if len != 0:
             return vec2(self.data * (size / len))
         else:
             raise ValueError('cannot re-scale a zero-length vector.')
 
-    def lerp(self, other, double ratio=0.5):
+    def lerp(self, other, double weight=0.5):
         """
         Linear interpolation with other.
 
-            ratio = 0 ==> other;
-            ratio = 1 ==> self;
-            otherwise ==> in between;
+            weight = 0 ==> other
+            weight = 1 ==> self
+            otherwise  ==> a proportional combination of self and other
         """
+
         cdef dvec2 vec
         set_vec(other, &vec)
-        return vec2(self.data * ratio + vec * (1.0 - ratio))
+        return vec2(self.data * weight + vec * (1.0 - weight))
 
     def midpoint(self, other):
         """Midpoint between two vectors."""
+
         cdef dvec2 vec
         set_vec(other, &vec)
         return vec2((self.data + vec) / 2)
@@ -338,32 +361,40 @@ cdef class Vec2:
     #
     # Queries
     #
-    def is_null(self, double tol=0.0):
+    def is_null(self):
         """Return True if vector is null."""
-        if self.x == 0.0 and self.y == 0.0:
-            return True
+
+        return self.data.x == 0.0 and self.data.y == 0.0
+
+    def is_almost_null(self, tol=1e-6):
+        """Return True if vector is null within given tolerance."""
+
         return fabs(length(self.data)) < tol
 
     def is_normalized(self, tol=1e-6):
-        """Return True if is normalized under the given tolerance."""
+        """Return True if is normalized within the given tolerance."""
+
         return fabs(length(self.data) - 1) < tol
 
-    def is_equal(self, other, double tol=1e-6):
+    def is_almost_equal(self, other, double tol=1e-6):
         """Return True if two vectors are equal under the given tolerance."""
+
         return length(self.data - tovec2(other).data) <= tol
 
     #
     # Norm
     #
-    def norm(self, norm=None):
-        if norm is None or norm == 'L2' or norm == 'euclidean':
-            return length(self.data)
-        elif norm == 'L1' or norm == 'manhattan':
-            return fabs(self.data.x) + fabs(self.data.y)
-        elif norm == 'Linf' or norm == 'max':
-            return max(fabs(self.data.x), fabs(self.data.y))
-        else:
-            raise ValueError(f'invalid norm: {norm!r}')
+    def norm(self):
+        return length(self.data)
+
+    def norm_l1(self):
+        return fabs(self.data.x) + fabs(self.data.y)
+
+    def norm_linf(self):
+        return max(fabs(self.data.x), fabs(self.data.y))
+
+    def norm_sqr(self):
+        return length2(self.data)
 
     def normalize(self):
         return vec2(normalize(self.data))

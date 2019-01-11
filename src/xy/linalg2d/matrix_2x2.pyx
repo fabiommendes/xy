@@ -6,7 +6,6 @@ include "../include/matrix.pxi"
 cimport cython
 from cpython cimport PyObject_TypeCheck
 from libc.math cimport sqrt
-cimport vector_2d as V
 
 
 # ------------------------------------------------------------------------------

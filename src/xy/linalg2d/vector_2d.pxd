@@ -31,6 +31,28 @@ cdef extern from "glm/geometric.hpp" namespace "glm":
     dvec2 refract(const dvec2, const dvec2, double)
 
 
+cdef extern from "glm/common.hpp" namespace "glm":
+    # abs
+    # ceil
+    # clamp
+    dvec2 floor(dvec2)
+    # fma
+    # fract
+    # frexp
+    # isinf
+    # isnan
+    # max
+    # min
+    # mix
+    # mod
+    # modf
+    # round
+    # roundEven
+    # sign
+    # step
+    # trunc
+
+
 # ------------------------------------------------------------------------------
 # VECTOR CLASSES
 # ------------------------------------------------------------------------------
