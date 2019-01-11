@@ -6,13 +6,13 @@ from xy import Vec2, simeq
 
 class TestVector2DInterfaces(i.LinearFixtures,
                              i.SequenceInterface,
-                             # i.VectorInterface,
-                             # i.VectorInvalidOperations,
-                             # i.ElementwiseAddition,
-                             # i.ScalarMultiplication,
-                             # i.Normed
-                             ):
+                             i.VectorInterface,
+                             i.VectorInvalidOperations,
+                             i.ElementwiseAddition,
+                             i.ScalarMultiplication,
+                             i.Normed):
     base_cls = Vec2
+    norm_list = ['l1', 'linf']
 
     def test_vector_repr(self):
         assert repr(Vec2(1, 2)) == 'Vec2(1, 2)'
@@ -54,10 +54,10 @@ class TestVector2DInterfaces(i.LinearFixtures,
             Z2 = u.rotate(360 * t / 6).norm()
             assert simeq(Z1, Z2)
 
-    # def test_triangular_identity_2D(self, norm):
-    #     self.assert_triangular_identity(Vec2(1, 2), Vec2(3, 4), norm)
-    #     self.assert_triangular_identity(Vec2(1, 1), Vec2(1, 1), norm)
-    #     self.assert_triangular_identity(Vec2(1, 2), Vec2(0, 0), norm)
+    def test_triangular_identity_2D(self):
+        self.assert_triangular_identity(Vec2(1, 2), Vec2(3, 4))
+        self.assert_triangular_identity(Vec2(1, 1), Vec2(1, 1))
+        self.assert_triangular_identity(Vec2(1, 2), Vec2(0, 0))
 
 
 class TestVec2Examples:
@@ -98,4 +98,4 @@ class TestRegressions:
         u = Vec2(3, 4)
         assert u.clamp(1, 10) == u
         assert u.clamp(2, 4) == u.normalize() * 4
-        assert u.sized(10) == 2 * u
+        assert u.with_length(10) == 2 * u
