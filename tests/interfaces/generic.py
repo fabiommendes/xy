@@ -4,60 +4,65 @@ import pytest
 
 
 class LinearFixtures:
+    """
+    Automatic fixtures for items items that can be created from a list of
+    scalar data.
+    """
     base_cls = None
 
-    @pytest.fixture
+    @property
     def size(self):
         return self.base_cls.size
 
     @pytest.fixture
-    def unity(self, size):
-        return self.base_cls(*(1 / sqrt(size) for _ in range(size)))
+    def unity(self):
+        return self.base_cls(*(1 / sqrt(self.size) for _ in range(self.size)))
 
     @pytest.fixture
-    def null(self, size):
-        return self.base_cls(*(0.0 for _ in range(size)))
+    def null(self):
+        return self.base_cls(*(0.0 for _ in range(self.size)))
 
     @pytest.fixture
-    def u(self, size):
-        return self.base_cls(*(x for x in range(1, size + 1)))
+    def u(self):
+        return self.base_cls(*(x + 1 for x in range(self.size )))
 
     @pytest.fixture
-    def v(self, size):
-        return self.base_cls(*reversed(self.u(size)))
+    def v(self):
+        return self.base_cls(*(x + 1 for x in reversed(range(self.size))))
 
     @pytest.fixture
-    def e1(self, size):
-        args = [0 for _ in range(size)]
+    def e1(self):
+        args = [0 for _ in range(self.size)]
         args[0] = 1
         return self.base_cls(*args)
 
     @pytest.fixture
-    def e2(self, size):
-        args = [0 for _ in range(size)]
+    def e2(self):
+        args = [0 for _ in range(self.size)]
         args[1] = 1
         return self.base_cls(*args)
 
     @pytest.fixture
-    def e3(self, size):
-        args = [0 for _ in range(size)]
+    def e3(self):
+        args = [0 for _ in range(self.size)]
         args[2] = 1
         return self.base_cls(*args)
 
     @pytest.fixture
-    def e4(self, size):
-        args = [0 for _ in range(size)]
+    def e4(self):
+        args = [0 for _ in range(self.size)]
         args[3] = 1
         return self.base_cls(*args)
 
 
 class SequenceInterface:
-    @pytest.fixture
-    def size(self):
-        return self.base_cls.size
+    """
+    For objects that behave like sequences.
+    """
+    base_cls = None
 
-    def test_has_basic_sequence_interface(self, u, size):
-        assert len(u) == size
+    def test_has_basic_sequence_interface(self, u):
+        assert len(u) == self.base_cls.size
 
     def test_equality_with_non_tuple_sequences(self, u):
         assert u != '12'

@@ -2,7 +2,7 @@ from math import pi, sqrt
 
 import pytest
 
-from smallvectors.utils import simeq
+from xy import simeq
 
 
 class VectorInterface:
@@ -11,64 +11,63 @@ class VectorInterface:
     """
 
     base_cls = None
+    size = property(lambda self: self.base_cls.size)
 
-    def test_equality_against_tuples_and_lists(self, u):
+    def test_equality_against_tuples(self, u):
         assert tuple(u) == u
-        assert list(u) == u
         assert u == tuple(u)
-        assert u == list(u)
 
     def test_vec_has_no_dict(self, u):
         with pytest.raises(AttributeError):
-            D = u.__dict__
+            print('dict:', u.__dict__)
 
-    def test_from_flat_data(self, size):
-        args = range(size)
+    def test_from_flat_data(self):
+        args = range(self.size)
         assert self.base_cls(*args) == self.base_cls.from_flat(args)
 
     def test_clamp_to_value(self, unity):
-        assert simeq(unity.clamped(2), 2 * unity)
-        assert simeq(unity.clamped(0.5), 0.5 * unity)
+        assert simeq(unity.with_length(2), 2 * unity)
+        assert simeq(unity.with_length(0.5), 0.5 * unity)
 
     def test_clamp_interval(self, unity):
-        assert unity.clamped(0.5, 2) == unity
+        assert unity.clamp(0.5, 2) == unity
 
     def test_clamp_missing_interval(self, unity):
-        assert simeq(unity.clamped(2, 3), 2 * unity)
-        assert simeq(unity.clamped(0.1, 0.5), 0.5 * unity)
+        assert simeq(unity.clamp(2, 3), 2 * unity)
+        assert simeq(unity.clamp(0.1, 0.5), 0.5 * unity)
 
     def test_lerp(self, u, v):
         assert simeq(u.lerp(v), v.lerp(u))
-        assert simeq(u.middle(v), u.lerp(v))
-        assert simeq(u.lerp(v, 0), u)
-        assert simeq(u.lerp(v, 1), v)
+        assert simeq(u.midpoint(v), u.lerp(v))
+        assert simeq(u.lerp(v, 0), v)
+        assert simeq(u.lerp(v, 1), u)
 
     def test_middle(self, unity, null):
-        assert simeq(unity.middle(null), null.middle(unity))
-        assert simeq(unity.middle(null), unity / 2)
+        assert simeq(unity.midpoint(null), null.midpoint(unity))
+        assert simeq(unity.midpoint(null), unity / 2)
 
     def test_distance(self, unity, null):
-        assert simeq(unity.distance(unity), 0)
-        assert simeq(unity.distance(null), 1)
-        assert simeq(unity.distance(-unity), 2)
+        assert simeq(unity.distance_to(unity), 0)
+        assert simeq(unity.distance_to(null), 1)
+        assert simeq(unity.distance_to(-unity), 2)
 
     def test_angle(self, unity):
-        assert simeq(unity.angle(unity), 0)
-        assert simeq(unity.angle(-unity), pi)
+        assert simeq(unity.angle_to(unity), 0)
+        assert simeq(unity.angle_to(-unity), 180)
+        assert simeq(unity.angle_to_rad(-unity), pi)
 
-    def test_vector_norm_defaults_to_euclidean(self, size):
-        vec = self.base_cls(*(1 for _ in range(size)))
-        assert simeq(vec.norm(), sqrt(size))
-        assert simeq(abs(vec), sqrt(size))
+    def test_vector_norm_defaults_to_euclidean(self):
+        vec = self.base_cls(*(1 for _ in range(self.size)))
+        assert simeq(vec.norm(), sqrt(self.size))
+        assert simeq(abs(vec), sqrt(self.size))
 
-    def test_l1_norm(self, size):
-        u = self.base_cls(*(1 for _ in range(size)))
-        assert abs(u.norm('l1') - size) < 1e-6
-        assert abs(u.norm_sqr('l1') - size**2) < 1e-6
+    def test_l1_norm(self):
+        u = self.base_cls(*(1 for _ in range(self.size)))
+        assert abs(u.norm_l1() - self.size) < 1e-6
 
-    def test_floordiv(self, size):
-        u = self.base_cls(*(3 for _ in range(size))) // 2
-        assert list(u) == [1] * size, u
+    def test_floordiv(self):
+        u = self.base_cls(*(3 for _ in range(self.size))) // 2
+        assert list(u) == [1] * self.size, u
 
 
 class VectorInvalidOperations:
@@ -78,36 +77,37 @@ class VectorInvalidOperations:
 
     def test_invalid_scalar_operations(self, u):
         with pytest.raises(TypeError):
-            y = u + 1
+            print(u + 1)
         with pytest.raises(TypeError):
-            y = u - 1
+            print(u - 1)
 
     def test_invalid_mul_tuple(self, u):
         with pytest.raises(TypeError):
-            y = u * (1, 2)
+            print(u * (1, 2))
 
     def test_invalid_mul_vec(self, u):
         with pytest.raises(TypeError):
-            y = u * u
+            print(u * u)
 
     def test_invalid_div_tuple(self, u):
         with pytest.raises(TypeError):
-            y = u / (1, 2)
+            print(u / (1, 2))
         with pytest.raises(TypeError):
-            y = (1, 2) / u
+            # noinspection PyUnresolvedReferences
+            print((1, 2) / u)
 
     def test_invalid_div_vec(self, u):
         with pytest.raises(TypeError):
-            y = u / u
+            print(u / u)
 
     def test_invalid_div_scalar(self, u):
         with pytest.raises(TypeError):
-            y = 1 / u
+            print(1 / u)
 
     def test_vec_almost_equal(self, u, v):
         v = u + v / 1e9
         w = u + 0 * v
-        assert u.almost_equal(v)
-        assert v.almost_equal(u)
-        assert u.almost_equal(w)
-        assert w.almost_equal(u)
+        assert u.is_almost_equal(v)
+        assert v.is_almost_equal(u)
+        assert u.is_almost_equal(w)
+        assert w.is_almost_equal(u)

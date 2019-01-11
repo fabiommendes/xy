@@ -2,7 +2,7 @@ import operator as op
 
 import pytest
 
-from smallvectors.utils import simeq
+from xy import simeq
 
 
 class ElementwiseAddition:
@@ -10,9 +10,11 @@ class ElementwiseAddition:
     For objects that implement a elementwise addition and subtraction.
     """
 
+    base_cls = None
+
     @pytest.fixture
     def equiv(self):
-        return [tuple, list]
+        return [tuple]
 
     @pytest.fixture
     def add_uv(self, u, v):
@@ -21,6 +23,9 @@ class ElementwiseAddition:
     @pytest.fixture
     def sub_uv(self, u, v):
         return self.base_cls(*get_args(u, v, op.sub))
+
+    def test_define_base_class(self):
+        assert self.base_cls is not None, 'Please define the base_cls attribute'
 
     def test_addition(self, u, v, add_uv):
         assert u + v == add_uv
@@ -58,13 +63,13 @@ class ElementwiseAddition:
 
     def test_cannot_add_scalar(self, u):
         with pytest.raises((ValueError, TypeError)):
-            u + 1
+            print('add one:', u + 1)
         with pytest.raises((ValueError, TypeError)):
-            u - 1
+            print('sub one:', u - 1)
         with pytest.raises((ValueError, TypeError)):
-            1 + u
+            print('add one:', 1 + u)
         with pytest.raises((ValueError, TypeError)):
-            1 - u
+            print('sub one:', 1 - u)
 
     def test_unary_addition_keeps_vector_the_same(self, u):
         assert +u == u
@@ -79,13 +84,18 @@ class ScalarMultiplication:
     For objects that implement scalar multiplication/division.
     """
 
+    base_cls = None
+
     @pytest.fixture
     def double(self, u):
         return self.base_cls(*(ui * 2 for ui in u))
 
     @pytest.fixture
-    def half(self, u, v):
+    def half(self, u):
         return self.base_cls(*(ui / 2 for ui in u))
+
+    def test_define_base_class(self):
+        assert self.base_cls is not None, 'Please define the base_cls attribute'
 
     def test_scalar_multiplication_is_commutative(self, u, double):
         assert u * 2 == double
@@ -109,19 +119,15 @@ class ScalarMultiplication:
 
     def test_rhs_division_fails(self, u):
         with pytest.raises((ValueError, TypeError)):
-            x = 1 / u
+            print('rhs division:', 1 / u)
         with pytest.raises((ValueError, TypeError)):
-            x = 1 // u
+            print('rhs division:', 1 // u)
 
     def test_vec_vec_division_fails(self, u):
         with pytest.raises((ValueError, TypeError)):
-            x = u / u
+            print('division:', u / u)
         with pytest.raises((ValueError, TypeError)):
-            x = u // u
-
-
-def get_args(u, v, op):
-    return tuple(op(ui, vi) for (ui, vi) in zip(u, v))
+            print('division', u // u)
 
 
 class Normed:
@@ -129,43 +135,49 @@ class Normed:
     Abstract tests for normed objects.
     """
 
-    @pytest.fixture
-    def norm(self):
-        return 'euclidean'
+    base_cls = None
+    norm_list = []
+
+    def get_norm_functions(self):
+        cls = self.base_cls
+        yield cls.norm
+        for norm in self.norm_list:
+            yield getattr(cls, 'norm_' + norm)
 
     @pytest.fixture
     def tol(self):
         return 1e-6
 
-    def assert_triangular_identity(self, u, v, norm):
-        norm_sum = (u + v).norm(norm)
-        sum_norm = u.norm(norm) + v.norm(norm)
-        assert norm_sum <= sum_norm + 1e-6
+    def assert_triangular_identity(self, u, v):
+        for norm in self.get_norm_functions():
+            norm_sum = norm(u + v)
+            sum_norm = norm(u) + norm(v)
+            assert norm_sum <= sum_norm + 1e-6
 
-    def test_unit_object_has_unity_norm(self, unity, tol, norm):
-        assert abs(unity.norm(norm) - 1.0) < tol
-        assert abs(unity.norm_sqr(norm) - 1.0) < tol
-        assert unity.is_unity(norm, tol=tol)
+    def test_unit_object_has_unity_norm(self, unity, tol):
+        assert abs(unity.norm() - 1.0) < tol
+        assert abs(unity.norm_sqr() - 1.0) < tol
+        assert unity.is_normalized(tol=tol)
 
     def test_unity_object_under_high_tolerance(self, unity):
-        assert (0.5 * unity).is_unity(tol=1.0)
+        assert (0.5 * unity).is_normalized(tol=1.0)
 
     def test_doubled_object_is_not_normalized(self, unity, tol):
         assert abs((2 * unity).norm() - 2) < tol
 
-    def test_unit_object_is_normalized(self, unity, tol, norm):
-        assert abs((unity.normalize(norm) - unity).norm(norm)) < tol
+    def test_unit_object_is_normalized(self, unity, tol):
+        assert abs((unity.normalize() - unity).norm()) < tol
 
-    def test_stretched_object_has_norm_greater_than_one(self, unity, norm):
-        assert (unity * 1.1).norm(norm) > 1
+    def test_stretched_object_has_norm_greater_than_one(self, unity):
+        assert (unity * 1.1).norm() > 1
 
-    def test_shrunk_object_has_norm_smaller_than_one(self, unity, norm):
-        assert (unity * 0.9).norm(norm) < 1
+    def test_shrunk_object_has_norm_smaller_than_one(self, unity):
+        assert (unity * 0.9).norm() < 1
 
-    def test_triangular_identity_unity_vector(self, unity, norm):
-        self.assert_triangular_identity(unity, unity, norm)
-        self.assert_triangular_identity(unity, 2 * unity, norm)
-        self.assert_triangular_identity(unity, 0 * unity, norm)
+    def test_triangular_identity_unity_vector(self, unity):
+        self.assert_triangular_identity(unity, unity)
+        self.assert_triangular_identity(unity, 2 * unity)
+        self.assert_triangular_identity(unity, 0 * unity)
 
     def test_conversion_to_normalized(self, unity):
         assert simeq(unity, unity.normalize())
@@ -175,4 +187,10 @@ class Normed:
         assert (unity * 0).is_null()
 
     def test_null_vector_with_tolerance(self, unity):
-        assert unity.is_null(tol=1)
+        assert unity.is_almost_null(tol=1)
+
+
+def get_args(u, v, func):
+    return tuple(func(ui, vi) for (ui, vi) in zip(u, v))
+
+
