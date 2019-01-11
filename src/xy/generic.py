@@ -9,10 +9,10 @@ def simeq(x, y, tol=1e-6):
     """Test approximate equality between both arguments."""
 
     try:
-        func = x.is_equal
+        func = x.is_almost_equal
     except AttributeError:
         try:
-            func = y.is_equal
+            func = y.is_almost_equal
         except AttributeError:
             raise TypeError(
                 f'cannot check approximate equality of '
