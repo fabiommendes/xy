@@ -34,7 +34,7 @@ cdef extern from "glm/geometric.hpp" namespace "glm":
 cdef extern from "glm/common.hpp" namespace "glm":
     # abs
     # ceil
-    # clamp
+    dvec2 clamp(dvec2, double, double) except +
     dvec2 floor(dvec2)
     # fma
     # fract

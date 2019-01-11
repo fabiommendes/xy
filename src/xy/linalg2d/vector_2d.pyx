@@ -112,7 +112,7 @@ cdef class Vec2:
         self.data = dvec2(x, y)
 
     def __repr__(self):
-        return f'Vec2({fmt(self.x)}, {fmt(self.y)})'
+        return f'{type(self).__name__}({fmt(self.x)}, {fmt(self.y)})'
 
     def __len__(self):
         return 2
@@ -362,14 +362,29 @@ cdef class Vec2:
             t = 0  ==> self
             t = 1  ==> other
             others ==> a proportional combination of self and other
+
+        Notes:
+            If self and other have the same length, slerp preserves the length
+            and interpolates the angle.
+
+        See also:
+            https://en.wikipedia.org/wiki/Slerp
         """
-        cdef double r0, a0, r1, a1, r, a
-        cdef Vec2 end = tovec2(other)
-        r0, a0 = self.polar_rad()
-        r1, a1 = end.polar_rad()
-        r = (1 - t) * r0 + t * r1
-        a = (1 - t) * a0 + t * a1
-        return Vec2.from_polar_rad(r, a)
+        cdef dvec2 u = self.data, v
+        set_vec(other, &v)
+
+        # Return lerp on special cases
+        ru = length(u)
+        rv = length(v)
+        if ru == 0 or rv == 0:
+            return vec2(mix(u, v, t))
+
+        # Compute slerp on the happy path (here, we are always using radians)
+        sin_omega = cross(u, v) / (ru * rv)
+        omega = atan2(sin_omega, dot(u, v))
+        a = rsin((1 - t) * omega) / sin_omega
+        b = rsin(t * omega) / sin_omega
+        return vec2(u * a + v * b)
 
     def midpoint(self, other):
         """Midpoint between two vectors."""
@@ -444,6 +459,19 @@ cdef class Direction2(Vec2):
             raise ValueError('cannot initialize direction from zero-length coordinates')
         self.data = dvec2(x / norm, y / norm)
 
+    def slerp(self, other, double t=0.5):
+        if not isdirection(other):
+            return super().slerp(other, t)
+
+        cdef dvec2 u = self.data, v
+        set_vec(other, &v)
+
+        sin_omega = cross(u, v)
+        omega = atan2(sin_omega, dot(u, v))
+        a = rsin((1 - t) * omega) / sin_omega
+        b = rsin(t * omega) / sin_omega
+        return unsafe_direction2(u * a + v * b)
+
     def is_unity(self, tol=1e-6):
         return True
 
@@ -455,17 +483,27 @@ cdef class Direction2(Vec2):
 # ------------------------------------------------------------------------------
 
 # Constructors
-cdef inline Vec2 newvec2(double x, double y): return vec2(dvec2(x, y))
-cdef inline Vec2 newdirection2(double x, double y): return direction2(dvec2(x, y))
+cdef inline Vec2 newvec2(double x, double y):
+    return vec2(dvec2(x, y))
+
+cdef inline Vec2 newdirection2(double x, double y):
+    return direction2(dvec2(x, y))
+
 cdef inline Vec2 vec2(dvec2 v):
     cdef PyObject* new = _PyObject_New(Vector2Type)
     (<Vec2> new).data = v
     return <Vec2> new
 
 cdef inline Direction2 direction2(dvec2 v):
-    cdef PyObject* new = _PyObject_New(Vector2Type)
+    cdef PyObject* new = _PyObject_New(Direction2Type)
     (<Direction2 > new).data = normalize(v)
     return <Direction2 > new
+
+cdef inline Direction2 unsafe_direction2(dvec2 v):
+    cdef PyObject* new = _PyObject_New(Direction2Type)
+    (<Direction2 > new).data = v
+    return <Direction2 > new
+
 
 cdef inline Vec2 tovec2(u):
     cdef double x, y
@@ -481,13 +519,22 @@ cdef inline Vec2 tovec2(u):
         raise TypeError
 
 # Queries
-cdef inline bint isvec(u): return PyObject_TypeCheck(u, Vector2Type)
-cdef inline bint isdirection(u): return PyObject_TypeCheck(u, Direction2Type)
-cdef inline bint istuple(u): return PyObject_TypeCheck(u, TupleType)
+cdef inline bint isvec(u):
+    return PyObject_TypeCheck(u, Vector2Type)
+
+cdef inline bint isdirection(u):
+    return PyObject_TypeCheck(u, Direction2Type)
+
+cdef inline bint istuple(u):
+    return PyObject_TypeCheck(u, TupleType)
 
 # Data accessors
-cdef inline double x(Vec2 u): return u.data.x
-cdef inline double y(Vec2 u): return u.data.y
+cdef inline double x(Vec2 u):
+    return u.data.x
+
+cdef inline double y(Vec2 u):
+    return u.data.y
+
 cdef inline void set_xy(u, double *x, double *y):
     if isvec(u):
         x[0] = (<Vec2> u).x
@@ -510,15 +557,28 @@ cdef inline void set_vec(u, dvec2 *vec):
         raise ValueError('Requires a Vec2 or a 2-tuple')
 
 # Vector functions
-cdef inline double length2(dvec2 v): return v.x * v.x + v.y * v.y
-cdef inline double norm_l1(dvec2 v): return fabs(v.x) + fabs(v.y)
-cdef inline double cross(dvec2 u, dvec2 v): return u.x * v.y - u.y * v.x
+cdef inline double length2(dvec2 v):
+    return v.x * v.x + v.y * v.y
+
+cdef inline double norm_l1(dvec2 v):
+    return fabs(v.x) + fabs(v.y)
+
+cdef inline double cross(dvec2 u, dvec2 v):
+    return u.x * v.y - u.y * v.x
+
 cdef inline double angle(dvec2 u, dvec2 v):
     cdef double cos_t = dot(u, v), \
                 sin_t = cross(u, v)
     return atan2(sin_t, cos_t)
-cdef inline double projection(dvec2 v, dvec2 n): return dot(v, n) / length(n)
-cdef inline dvec2 vprojection(dvec2 v, dvec2 n): return (dot(v, n) / length2(n)) * n
+
+cdef inline double projection(dvec2 v, dvec2 n):
+    return dot(v, n) / length(n)
+
+cdef inline dvec2 vprojection(dvec2 v, dvec2 n):
+    return (dot(v, n) / length2(n)) * n
+
+cdef inline dvec2 polar(dvec2 v):
+    return dvec2(length(v), atan2(v.y, v.x))
 
 # Constants
 cdef Vec2 origin = Vec2(0, 0)

@@ -14,13 +14,13 @@ cpdef inline double r180(double x):
     return x % 180
 
 cpdef inline double s180(double x):
-    return x % 180
+    return (x + 180) % 360 - 180
 
 cpdef inline double r90(double x):
     return x % 90
 
 cpdef inline double s90(double x):
-    return x % 90
+    return (x + 90) % 180 - 90
 
 
 cpdef inline double cos(double x):
