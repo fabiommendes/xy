@@ -80,6 +80,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     install_requires=[
+        'pygeneric~=1.0.0',
     ],
     extras_require={
         'dev': [
