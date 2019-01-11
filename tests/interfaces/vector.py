@@ -2,7 +2,7 @@ from math import pi, sqrt
 
 import pytest
 
-from xy import simeq
+from xy import simeq, assert_simeq
 
 
 class VectorInterface:
@@ -37,10 +37,10 @@ class VectorInterface:
         assert simeq(unity.clamp(0.1, 0.5), 0.5 * unity)
 
     def test_lerp(self, u, v):
-        assert simeq(u.lerp(v), v.lerp(u))
-        assert simeq(u.midpoint(v), u.lerp(v))
-        assert simeq(u.lerp(v, 0), v)
-        assert simeq(u.lerp(v, 1), u)
+        assert_simeq(u.lerp(v), v.lerp(u))
+        assert_simeq(u.midpoint(v), u.lerp(v))
+        assert_simeq(u.lerp(v, 0), u)
+        assert_simeq(u.lerp(v, 1), v)
 
     def test_middle(self, unity, null):
         assert simeq(unity.midpoint(null), null.midpoint(unity))

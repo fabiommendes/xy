@@ -338,25 +338,45 @@ cdef class Vec2:
         else:
             raise ValueError('cannot re-scale a zero-length vector.')
 
-    def lerp(self, other, double weight=0.5):
+    def lerp(self, other, double t=0.5):
         """
-        Linear interpolation with other.
+        Linear interpolation o points.
 
-            weight = 0 ==> other
-            weight = 1 ==> self
-            otherwise  ==> a proportional combination of self and other
+        Maps the range [0, 1] to a path that goes from self to other.
+
+            t = 0  ==> self
+            t = 1  ==> other
+            others ==> a proportional combination of self and other
         """
 
         cdef dvec2 vec
         set_vec(other, &vec)
-        return vec2(self.data * weight + vec * (1.0 - weight))
+        return vec2(mix(self.data, vec, t))
+
+    def slerp(self, other, double t=0.5):
+        """
+        Spherical interpolation o points.
+
+        Like lerp, but uses polar coordinates.
+
+            t = 0  ==> self
+            t = 1  ==> other
+            others ==> a proportional combination of self and other
+        """
+        cdef double r0, a0, r1, a1, r, a
+        cdef Vec2 end = tovec2(other)
+        r0, a0 = self.polar_rad()
+        r1, a1 = end.polar_rad()
+        r = (1 - t) * r0 + t * r1
+        a = (1 - t) * a0 + t * a1
+        return Vec2.from_polar_rad(r, a)
 
     def midpoint(self, other):
         """Midpoint between two vectors."""
 
         cdef dvec2 vec
         set_vec(other, &vec)
-        return vec2((self.data + vec) / 2)
+        return vec2(mix(self.data, vec, 0.5))
 
     #
     # Queries

@@ -43,7 +43,7 @@ cdef extern from "glm/common.hpp" namespace "glm":
     # isnan
     # max
     # min
-    # mix
+    dvec2 mix(dvec2, dvec2, double)
     # mod
     # modf
     # round

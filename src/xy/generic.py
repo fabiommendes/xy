@@ -1,7 +1,7 @@
 from generic import generic
 from numbers import Number
 
-__all__ = ['simeq']
+__all__ = ['simeq', 'assert_simeq']
 
 
 @generic
@@ -33,3 +33,9 @@ def _(x, y, tol=1e-6):
 def _(x, y, tol=1e-6):
     eq = simeq
     return len(x) == len(y) and all(eq(xi, yi, tol=tol) for xi, yi in zip(x, y))
+
+
+def assert_simeq(u, v, tol=1e-6):
+    """Assert approximate equality between both arguments."""
+
+    assert simeq(u, v, tol=tol), f'{u} is different from {v}'
