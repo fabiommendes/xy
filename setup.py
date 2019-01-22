@@ -42,10 +42,17 @@ def get_extensions():
         extension('xy.linalg2d.vector_2d'),
         extension('xy.linalg2d.matrix_2x2'),
         extension('xy.linalg2d.vecarray_2d'),
+        extension('xy.linalg2d.affine_2d'),
 
         # Shapes 2d
         extension('xy.shapes2d.bbox_2d'),
         extension('xy.shapes2d.line_2d'),
+
+        # Linear algebra 3d
+        extension('xy.linalg3d.vector_3d'),
+        # extension('xy.linalg3d.matrix_3x3'),
+        # extension('xy.linalg3d.vecarray_3d'),
+        # extension('xy.linalg3d.affine_3d'),
     ], include_path=['include'])
 
 
