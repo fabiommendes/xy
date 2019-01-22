@@ -33,23 +33,23 @@ cdef class Segment2:
 
     @property
     def start(self):
-        return V.vec2(self._start)
+        return V.vec(self._start)
 
     @property
     def end(self):
-        return V.vec2(self._end)
+        return V.vec(self._end)
 
     @property
     def displacement(self):
-        return V.vec2(self._end - self._start)
+        return V.vec(self._end - self._start)
 
     @property
     def direction(self):
-        return V.direction2(self._end - self._start)
+        return V.direction(self._end - self._start)
 
     @property
     def midpoint(self):
-        return V.vec2(self._end * 0.5 + self._start * 0.5)
+        return V.vec(self._end * 0.5 + self._start * 0.5)
 
     @property
     def bisection(self):
@@ -277,4 +277,4 @@ cdef PyTypeObject* Line2Type = <PyTypeObject*> Line2
 cdef PyTypeObject* Ray2Type = <PyTypeObject*> Ray2
 
 oo = float('inf')
-cdef V.Vec2 origin = V.newvec2(0, 0)
+cdef V.Vec2 origin = V.Vec2(0, 0)

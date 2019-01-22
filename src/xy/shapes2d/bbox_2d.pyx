@@ -34,7 +34,7 @@ cdef class BBox2:
 
     @property
     def pos(self):
-        return V.newvec2((self.xmin + self.xmax) / 2, (self.ymin + self.ymax) / 2)
+        return V.flatvec((self.xmin + self.xmax) / 2, (self.ymin + self.ymax) / 2)
 
     @property
     def bbox(self):
@@ -43,25 +43,25 @@ cdef class BBox2:
     @property
     def vertices(self):
         return (
-            V.newvec2(self.xmin, self.ymin), V.newvec2(self.xmax, self.ymin),
-            V.newvec2(self.xmax, self.ymax), V.newvec2(self.xmin, self.ymax)
+            V.flatvec(self.xmin, self.ymin), V.flatvec(self.xmax, self.ymin),
+            V.flatvec(self.xmax, self.ymax), V.flatvec(self.xmin, self.ymax)
         )
 
     @property
     def vertice_ne(self):
-        return V.newvec2(self.xmax, self.ymax)
+        return V.flatvec(self.xmax, self.ymax)
 
     @property
     def vertice_nw(self):
-        return V.newvec2(self.xmin, self.ymax)
+        return V.flatvec(self.xmin, self.ymax)
 
     @property
     def vertice_se(self):
-        return V.newvec2(self.xmax, self.ymin)
+        return V.flatvec(self.xmax, self.ymin)
 
     @property
     def vertice_sw(self):
-        return V.newvec2(self.xmin, self.ymin)
+        return V.flatvec(self.xmin, self.ymin)
 
     @property
     def outer_radius(self):
